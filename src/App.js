@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import Blog from './components/Blog'
+import LogoutButton from './components/LogoutButton'
 import blogService from './services/blogs'
 import loginService from './services/login'
 
@@ -9,10 +10,19 @@ const App = () => {
   const [password, setPassword] = useState('')
   const [user, setUser] = useState(null)
 
+  const LOGGED_IN_USER = 'loggedInUser'
+
   useEffect(() => {
     blogService.getAll().then(blogs =>
       setBlogs( blogs )
     )  
+  }, [])
+
+  useEffect(() => {
+    const loggedInUser = window.localStorage.getItem(LOGGED_IN_USER)
+    if (loggedInUser) {
+      setUser(JSON.parse(loggedInUser))
+    }
   }, [])
 
   const loginForm = () => (
@@ -49,6 +59,7 @@ const App = () => {
     event.preventDefault()
     try {
       const user = await loginService.loginUser({ username, password })
+      window.localStorage.setItem(LOGGED_IN_USER, JSON.stringify(user))
       setUser(user)
       setUsername('')
       setPassword('')
@@ -59,6 +70,11 @@ const App = () => {
     }
   }
 
+  const handleLogout = (event) => {
+    window.localStorage.removeItem(LOGGED_IN_USER)
+    setUser(null)
+  }
+
   return (
     <div>
       <h2>blogs</h2>
@@ -66,7 +82,7 @@ const App = () => {
       { user === null ? 
         loginForm() : 
         <div>
-          <p>{user.name} logged in</p>
+          <p>{user.name} logged in <LogoutButton logoutHandler={handleLogout} /></p>
           {blogList()}
         </div>
       }
