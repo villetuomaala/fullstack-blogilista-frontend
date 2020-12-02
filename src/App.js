@@ -3,6 +3,8 @@ import Blog from './components/Blog'
 import Button from './components/Button'
 import blogService from './services/blogs'
 import loginService from './services/login'
+import Notification from './components/Notification'
+import messages from './utils/messages'
 
 const App = () => {
   const [blogs, setBlogs] = useState([])
@@ -12,8 +14,11 @@ const App = () => {
   const [title, setTitle] = useState('')
   const [author, setAuthor] = useState('')
   const [url, setUrl] = useState('')
+  const [notificationMessage, setNotificationMessage] = useState(null)
+  const [notificationMessageType, setNotificationMessageType] = useState(null)
 
   const LOGGED_IN_USER = 'loggedInUser'
+  const NOTIFICATION_TIMEOUT_MS = 4000
 
   useEffect(() => {
     blogService.getAll().then(blogs =>
@@ -28,6 +33,15 @@ const App = () => {
       blogService.setToken(JSON.parse(loggedInUser).token)
     }
   }, [])
+
+  const showNotification = (type, message, timeout) => {
+    setNotificationMessage(message)
+    setNotificationMessageType(type)
+    setTimeout( () => {
+      setNotificationMessage(null)
+      setNotificationMessageType(null)
+    }, timeout)
+  }
 
   const loginForm = () => (
      <form onSubmit={handleLogin}>
@@ -77,10 +91,12 @@ const App = () => {
       setUser(user)
       setUsername('')
       setPassword('')
-    } catch (exception) {
+      showNotification('success', messages.login.success(), NOTIFICATION_TIMEOUT_MS)
+    } catch (error) {
       setUser(null)
       setUsername('')
       setPassword('')
+      showNotification('error', error.response.data.error, NOTIFICATION_TIMEOUT_MS)
     }
   }
 
@@ -88,29 +104,36 @@ const App = () => {
     window.localStorage.removeItem(LOGGED_IN_USER)
     setUser(null)
     blogService.setToken(null)
+    showNotification('success', messages.logout.success(), NOTIFICATION_TIMEOUT_MS)
   }
 
   const handleBlogSubmit = async (event) => {
     event.preventDefault()
 
-    const data = {
-      author: author,
-      likes: 0,
-      url: url,
-      title: title,
-      userId: user.id
-    }
+    try {
+      const data = {
+        author: author,
+        likes: 0,
+        url: url,
+        title: title,
+        userId: user.id
+      }
 
-    const newBlog = await blogService.create(data)
-    setBlogs(blogs.concat(newBlog))
-    setTitle('')
-    setAuthor('')
-    setUrl('')
+      const newBlog = await blogService.create(data)
+      setBlogs(blogs.concat(newBlog))
+      setTitle('')
+      setAuthor('')
+      setUrl('')
+      showNotification('success', messages.models.blog.insert.success(newBlog.title, newBlog.author), NOTIFICATION_TIMEOUT_MS)
+    } catch (error) {
+      showNotification('success', messages.models.blog.insert.failure(error.response.data.error), NOTIFICATION_TIMEOUT_MS)
+    }
   }
 
   return (
     <div>
       <h2>blogs</h2>
+      <Notification message={notificationMessage} type={notificationMessageType} />
 
       { user === null ? 
         loginForm() : 
