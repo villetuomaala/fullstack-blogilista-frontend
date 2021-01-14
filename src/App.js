@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import Blog from './components/Blog'
 import Button from './components/Button'
 import blogService from './services/blogs'
 import loginService from './services/login'
 import Notification from './components/Notification'
+import Togglable from './components/Togglable'
 import messages from './utils/messages'
 
 const App = () => {
@@ -33,6 +34,8 @@ const App = () => {
       blogService.setToken(JSON.parse(loggedInUser).token)
     }
   }, [])
+
+  const blogPostRef = useRef()
 
   const showNotification = (type, message, timeout) => {
     setNotificationMessage(message)
@@ -109,7 +112,6 @@ const App = () => {
 
   const handleBlogSubmit = async (event) => {
     event.preventDefault()
-
     try {
       const data = {
         author: author,
@@ -125,8 +127,9 @@ const App = () => {
       setAuthor('')
       setUrl('')
       showNotification('success', messages.models.blog.insert.success(newBlog.title, newBlog.author), NOTIFICATION_TIMEOUT_MS)
+      blogPostRef.current.toggleVisibility()
     } catch (error) {
-      showNotification('success', messages.models.blog.insert.failure(error.response.data.error), NOTIFICATION_TIMEOUT_MS)
+      showNotification('error', messages.models.blog.insert.failure(error.response.data.error), NOTIFICATION_TIMEOUT_MS)
     }
   }
 
@@ -141,7 +144,9 @@ const App = () => {
           <p>{user.name} logged in <Button type="button" handler={handleLogout} buttonName="logout" /></p>
           {blogList()}
           <br />
-          {blogForm()}
+          <Togglable buttonLabel="Add new blog" ref={blogPostRef}>
+            {blogForm()}
+          </Togglable>
         </div>
       }
 
