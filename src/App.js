@@ -6,15 +6,13 @@ import loginService from './services/login'
 import Notification from './components/Notification'
 import Togglable from './components/Togglable'
 import messages from './utils/messages'
+import BlogForm from './components/BlogForm'
 
 const App = () => {
   const [blogs, setBlogs] = useState([])
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [user, setUser] = useState(null)
-  const [title, setTitle] = useState('')
-  const [author, setAuthor] = useState('')
-  const [url, setUrl] = useState('')
   const [notificationMessage, setNotificationMessage] = useState(null)
   const [notificationMessageType, setNotificationMessageType] = useState(null)
 
@@ -77,12 +75,9 @@ const App = () => {
   )
 
   const blogForm = () => (
-    <form onSubmit={handleBlogSubmit}>
-      title: <input type="text" name="title" value={title} onChange={({ target }) => setTitle(target.value)} /><br />
-      author: <input type="text" name="author" value={author} onChange={({ target }) => setAuthor(target.value)} /><br />
-      url: <input type="text" name="url" value={url} onChange={({ target }) => setUrl(target.value)} /><br />
-      <Button buttonName="create" type="submit" />
-    </form>
+    <Togglable buttonLabel="Add new blog" ref={blogPostRef}>
+      <BlogForm submit={addBlog} />
+    </Togglable>
   )
 
   const handleLogin = async (event) => {
@@ -110,24 +105,15 @@ const App = () => {
     showNotification('success', messages.logout.success(), NOTIFICATION_TIMEOUT_MS)
   }
 
-  const handleBlogSubmit = async (event) => {
-    event.preventDefault()
+  const addBlog = async (blogObject) => {
     try {
-      const data = {
-        author: author,
-        likes: 0,
-        url: url,
-        title: title,
+      const newBlog = await blogService.create({
+        ...blogObject,
         userId: user.id
-      }
-
-      const newBlog = await blogService.create(data)
+      })
       setBlogs(blogs.concat(newBlog))
-      setTitle('')
-      setAuthor('')
-      setUrl('')
-      showNotification('success', messages.models.blog.insert.success(newBlog.title, newBlog.author), NOTIFICATION_TIMEOUT_MS)
       blogPostRef.current.toggleVisibility()
+      showNotification('success', messages.models.blog.insert.success(newBlog.title, newBlog.author), NOTIFICATION_TIMEOUT_MS)
     } catch (error) {
       showNotification('error', messages.models.blog.insert.failure(error.response.data.error), NOTIFICATION_TIMEOUT_MS)
     }
@@ -143,10 +129,8 @@ const App = () => {
         <div>
           <p>{user.name} logged in <Button type="button" handler={handleLogout} buttonName="logout" /></p>
           {blogList()}
-          <br />
-          <Togglable buttonLabel="Add new blog" ref={blogPostRef}>
-            {blogForm()}
-          </Togglable>
+          <br /> 
+          {blogForm()}
         </div>
       }
 
