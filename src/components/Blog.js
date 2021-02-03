@@ -1,8 +1,9 @@
 import React, { useState } from 'react'
 import Button from './Button'
+import blogService from '../services/blogs'
 
-const Blog = ({ blog }) => {
-  const [viewMode, setViewMode] = useState('minified')
+const Blog = ({ blog, setBlogs, blogs }) => {
+  const [viewMode, setViewMode] = useState('minified') 
 
   const blogStyle = {
     paddingTop: 10,
@@ -16,7 +17,13 @@ const Blog = ({ blog }) => {
     setViewMode(viewMode === 'minified' ? 'extended' : 'minified')
   }
 
-  const getBlogDescription = (blog) => {
+  const handleLikeBlog = async () => {
+    const modifiedBlog = {...blog, likes: blog.likes + 1}
+    const updatedBlog = await blogService.update(modifiedBlog)
+    setBlogs(blogs.map(b => b.id === updatedBlog.id ? updatedBlog : b))
+  }
+
+  const getBlogDescription = () => {
     if (viewMode === 'minified') {
       return (
         <div>
@@ -28,7 +35,7 @@ const Blog = ({ blog }) => {
         <div>
           <strong>{blog.title}</strong> ::: {blog.author} <Button type="button" handler={handleViewModeChange} buttonName={viewMode === 'minified' ? 'view' : 'hide'} /><br />
           {blog.url}<br />
-          likes {blog.likes}<br />
+          likes {blog.likes} <Button type="button" handler={handleLikeBlog} buttonName='like' /><br /> 
           {blog.user ? blog.user.name : 'not available'}<br />
           {blog.id}
         </div>
@@ -38,7 +45,7 @@ const Blog = ({ blog }) => {
 
   return (
     <div style={blogStyle}>
-      {getBlogDescription(blog)}
+      {getBlogDescription()}
     </div>
   )
 }
