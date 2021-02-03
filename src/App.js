@@ -7,6 +7,7 @@ import Notification from './components/Notification'
 import Togglable from './components/Togglable'
 import messages from './utils/messages'
 import BlogForm from './components/BlogForm'
+import utils from './utils/utils'
 
 const App = () => {
   const [blogs, setBlogs] = useState([])
@@ -16,7 +17,6 @@ const App = () => {
   const [notificationMessage, setNotificationMessage] = useState(null)
   const [notificationMessageType, setNotificationMessageType] = useState(null)
 
-  const LOGGED_IN_USER = 'loggedInUser'
   const NOTIFICATION_TIMEOUT_MS = 4000
 
   useEffect(() => {
@@ -26,7 +26,7 @@ const App = () => {
   }, [])
 
   useEffect(() => {
-    const loggedInUser = window.localStorage.getItem(LOGGED_IN_USER)
+    const loggedInUser = utils.getLoggedInUser()
     if (loggedInUser) {
       setUser(JSON.parse(loggedInUser))
       blogService.setToken(JSON.parse(loggedInUser).token)
@@ -84,7 +84,7 @@ const App = () => {
     event.preventDefault()
     try {
       const user = await loginService.loginUser({ username, password })
-      window.localStorage.setItem(LOGGED_IN_USER, JSON.stringify(user))
+      utils.setLoggedInUser(user)
       blogService.setToken(user.token)
       setUser(user)
       setUsername('')
@@ -99,7 +99,7 @@ const App = () => {
   }
 
   const handleLogout = (event) => {
-    window.localStorage.removeItem(LOGGED_IN_USER)
+    utils.unsetLoggedInUser();
     setUser(null)
     blogService.setToken(null)
     showNotification('success', messages.logout.success(), NOTIFICATION_TIMEOUT_MS)

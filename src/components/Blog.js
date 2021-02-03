@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import Button from './Button'
 import blogService from '../services/blogs'
+import utils from '../utils/utils'
 
 const Blog = ({ blog, setBlogs, blogs }) => {
   const [viewMode, setViewMode] = useState('minified') 
@@ -23,6 +24,12 @@ const Blog = ({ blog, setBlogs, blogs }) => {
     setBlogs(blogs.map(b => b.id === updatedBlog.id ? updatedBlog : b).sort((a, b) => a.likes - b.likes))
   }
 
+  const handleRemoveBlog = async () => {
+    await blogService.remove(blog.id)
+    setBlogs(blogs.filter((b) => b.id !== blog.id).sort((a, b) => a.likes - b.likes))
+    // kato vielä ui
+  }
+
   const getBlogDescription = () => {
     if (viewMode === 'minified') {
       return (
@@ -37,7 +44,8 @@ const Blog = ({ blog, setBlogs, blogs }) => {
           {blog.url}<br />
           likes {blog.likes} <Button type="button" handler={handleLikeBlog} buttonName='like' /><br /> 
           {blog.user ? blog.user.name : 'not available'}<br />
-          {blog.id}
+          {blog.id}<br />
+          {blog.user ? blog.user.id === JSON.parse(utils.getLoggedInUser()).id ? (<Button type="button" handler={handleRemoveBlog} buttonName='remove' />) : '' : ''}
         </div>
       )
     }
