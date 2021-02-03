@@ -20,7 +20,7 @@ const Blog = ({ blog, setBlogs, blogs }) => {
   const handleLikeBlog = async () => {
     const modifiedBlog = {...blog, likes: blog.likes + 1}
     const updatedBlog = await blogService.update(modifiedBlog)
-    setBlogs(blogs.map(b => b.id === updatedBlog.id ? updatedBlog : b))
+    setBlogs(blogs.map(b => b.id === updatedBlog.id ? updatedBlog : b).sort((a, b) => a.likes - b.likes))
   }
 
   const getBlogDescription = () => {

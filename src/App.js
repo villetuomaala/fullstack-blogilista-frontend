@@ -111,7 +111,7 @@ const App = () => {
         ...blogObject,
         userId: user.id
       })
-      setBlogs(blogs.concat(newBlog))
+      setBlogs(blogs.concat(newBlog).sort((a, b) => a.likes - b.likes))
       blogPostRef.current.toggleVisibility()
       showNotification('success', messages.models.blog.insert.success(newBlog.title, newBlog.author), NOTIFICATION_TIMEOUT_MS)
     } catch (error) {
